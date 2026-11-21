@@ -87,3 +87,51 @@ for(const valor of [0,1]) for(const inicio of [0,1,2,3]) for(const orientacao of
   const t=vazio();for(let i=0;i<3;i++) if(orientacao==='linha')t[1][inicio+i]=valor;else t[inicio+i][1]=valor;
   assert.equal(validar(t),false);
 });
+test('quatro iguais não consecutivos também violam o equilíbrio',()=>{const t=vazio();t[0]=[0,0,1,0,0,1];assert.equal(validar(t),false);assert.equal(validar(transpor(t)),false);});
+test('linhas completas duplicadas são inválidas mesmo sem trincas',()=>{const t=vazio();t[0]=[0,0,1,0,1,1];t[4]=[...t[0]];assert.equal(validar(t),false);});
+test('colunas completas duplicadas são inválidas mesmo sem trincas',()=>{const t=vazio();t[0]=[0,0,1,0,1,1];t[4]=[...t[0]];assert.equal(validar(transpor(t)),false);});
+test('repetição parcial não deve ser confundida com repetição de linha completa',()=>{const t=vazio();t[0]=[0,1,null,null,null,null];t[1]=[0,1,null,null,null,null];assert.equal(validar(t),true);});
+test('diagonais não estão sujeitas à regra de trincas',()=>{const t=vazio();for(let i=0;i<6;i++)t[i][i]=0;assert.equal(validar(t),true);});
+test('linha pode ser igual a uma coluna: grupos de unicidade são separados',()=>{
+  const t=vazio(),l=[0,0,1,0,1,1];t[0]=[...l];l.forEach((v,i)=>t[i][0]=v);assert.equal(validar(t),true);
+});
+test('resolver grade vazia entrega uma solução que respeita o contrato independentemente da validação do programa',()=>{const t=vazio();conferirSolucao(resolver(t),t);assert.deepEqual(t,vazio());});
+test('resolver grade completa devolve valor equivalente, sem compartilhar linhas',()=>{
+  const t=copia(SOLUCAO),s=resolver(t);assert.deepEqual(s,t);s[0][0]=1-s[0][0];assert.deepEqual(t,SOLUCAO);
+});
+test('resolver preserva pistas para 36 puzzles com uma lacuna, incluindo todos os cantos',()=>{
+  for(let i=0;i<36;i++){const t=copia(SOLUCAO);t[Math.floor(i/6)][i%6]=null;const antes=copia(t);conferirSolucao(resolver(t),t);assert.deepEqual(t,antes);}
+});
+test('resolver puzzles esparsos não altera a entrada e não precisa escolher a solução conhecida',()=>{
+  for(const divisor of [2,3,4]){const t=SOLUCAO.map((l,r)=>l.map((v,c)=>(r*6+c)%divisor===0?v:null));const antes=copia(t);conferirSolucao(resolver(t),t);assert.deepEqual(t,antes);}
+});
+test('pistas contraditórias retornam null e são rejeitadas pelo construtor',()=>{
+  const t=vazio();t[0]=[1,1,1,null,null,null];const antes=copia(t);assert.equal(resolver(t),null);assert.deepEqual(t,antes);assert.throws(()=>new SudokuBinario(t),Error);
+});
+test('posição localmente válida mas globalmente insolúvel retorna null, sem confundir validar com resolver',()=>{
+  const t=[[null,1,null,1,null,null],[1,null,1,null,0,1],[null,null,1,null,null,null],[null,1,0,null,null,null],[null,null,null,1,null,1],[null,null,1,null,0,null]],antes=copia(t);
+  assert.equal(validar(t),true);assert.equal(resolver(t),null);assert.deepEqual(t,antes);assert.doesNotThrow(()=>new SudokuBinario(t));
+});
+test('construtor copia a matriz e marca exatamente as pistas originais como fixas',()=>{
+  const t=vazio();t[0][0]=0;t[5][5]=1;const j=new SudokuBinario(t);
+  assert.equal(j.fixas[0][0],true);assert.equal(j.fixas[5][5],true);assert.equal(j.fixas.flat().filter(Boolean).length,2);
+  t[0][0]=1;assert.equal(j.tabuleiro[0][0],0);j.jogar(1,1,0);assert.equal(t[1][1],null);
+});
+test('pista fixa não pode ser alterada, apagada ou reescrita com o mesmo valor',()=>{const t=vazio();t[0][0]=0;const j=new SudokuBinario(t);for(const v of [0,1,null])rejeita(j,()=>j.jogar(0,0,v));});
+test('jogada correta é gravada; jogada editável pode ser substituída e apagada',()=>{
+  const j=new SudokuBinario(vazio());assert.equal(j.jogar(0,0,0),'jogando');assert.equal(j.jogar(0,0,1),'jogando');assert.equal(j.tabuleiro[0][0],1);j.jogar(0,0,null);assert.equal(j.tabuleiro[0][0],null);assert.equal(j.fixas[0][0],false);
+});
+test('jogada que cria trinca sofre rollback integral',()=>{const j=new SudokuBinario(vazio());j.jogar(0,0,1);j.jogar(0,1,1);rejeita(j,()=>j.jogar(0,2,1));});
+test('substituição inválida restaura o valor anterior em vez de apagar a casa',()=>{
+  const j=new SudokuBinario(vazio());j.jogar(0,0,0);j.jogar(0,1,0);j.jogar(0,2,1);rejeita(j,()=>j.jogar(0,2,0));assert.equal(j.tabuleiro[0][2],1);
+});
+test('jogada que completa linha duplicada é desfeita',()=>{
+  const t=vazio();t[0]=[0,0,1,0,1,1];t[1]=[0,0,1,0,1,null];const j=new SudokuBinario(t);rejeita(j,()=>j.jogar(1,5,1));
+});
+for(const [r,c] of [[-1,0],[6,0],[0,-1],[0,6],[0.5,0],['0',0],[NaN,0]]) test(`jogada em índice ${String(r)},${String(c)} é rejeitada sem efeito`,()=>{const j=new SudokuBinario(vazio());rejeita(j,()=>j.jogar(r,c,0));});
+for(const v of [2,-1,'0',false,undefined]) test(`valor inválido de jogada ${String(v)} é rejeitado sem efeito`,()=>{const j=new SudokuBinario(vazio());rejeita(j,()=>j.jogar(0,0,v));});
+test('partida completa: colocar 36 valores corretos só vence na última casa',()=>{
+  const j=new SudokuBinario(vazio());for(let i=0;i<36;i++){const r=Math.floor(i/6),c=i%6;assert.equal(j.jogar(r,c,SOLUCAO[r][c]),i===35?'venceu':'jogando');}
+  conferirSolucao(j.tabuleiro,SOLUCAO);assert.equal(j.jogar(5,5,null),'jogando');assert.equal(j.jogar(5,5,SOLUCAO[5][5]),'venceu');
+});
+test('partidas não compartilham tabuleiro nem marcação de pistas',()=>{const a=new SudokuBinario(vazio()),b=new SudokuBinario(vazio());a.jogar(0,0,1);assert.equal(b.tabuleiro[0][0],null);assert.notStrictEqual(a.fixas,b.fixas);});
