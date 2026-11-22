@@ -1,0 +1,42 @@
+{
+  "tests/certeza.spec.js": {
+    "assinatura": {
+      "imports": "57d3c054d925c31ec829d9b53fb7a11ec5b4ac6db3758e70a0dc028cbbb890f2",
+      "declaracoes": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "execucoes": "cf8c331ed3207c87bf2d0be325d785e941856d0be4f8d3d7d789af77a3859ec7"
+    },
+    "fixture": null,
+    "assercoesExtraidas": 12,
+    "preparacoesExtraidas": 0
+  },
+  "tests/regras.spec.js": {
+    "assinatura": {
+      "imports": "84b84897a355ddc70b411241a220354cee6e0473b451c036e66332d87b635bab",
+      "declaracoes": "56daed67a67f62bab8f72296e6b0ec30612668bf15d62fa3c2aaf0d8523e1c68",
+      "execucoes": "976ff777849d6c5fda410aed3d73b45ac458e60fdf919cef5ece94848a1c9e93"
+    },
+    "fixture": "tests/cenarios/regras.js",
+    "assercoesExtraidas": 15,
+    "preparacoesExtraidas": 0
+  },
+  "tests/tabuleiro.spec.js": {
+    "assinatura": {
+      "imports": "e24dccdfca78682c22f277c187df76fb391ac6e4078f08a5de38ffe27e2b795a",
+      "declaracoes": "e9657b440afc0f952a54bf2bfd783d0faced3406664ae2b144b28fe05535a743",
+      "execucoes": "a12a7227612a8f1efef0599141edb4e742c154cef8fb67b62523f36a7355e852"
+    },
+    "fixture": "tests/cenarios/tabuleiro.js",
+    "assercoesExtraidas": 25,
+    "preparacoesExtraidas": 0
+  },
+  "tests/vitoria.spec.js": {
+    "assinatura": {
+      "imports": "4755c3c3eb70e9b29371c122fa9b3285850e27cffffb5123897c758cd0ccd197",
+      "declaracoes": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "execucoes": "5983f55879ed84215ece9e7e912c028fb53fcbc306f685c4cd5e13285a915968"
+    },
+    "fixture": null,
+    "assercoesExtraidas": 8,
+    "preparacoesExtraidas": 0
+  }
+}
